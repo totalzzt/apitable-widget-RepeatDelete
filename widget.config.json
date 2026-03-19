@@ -1,0 +1,17 @@
+{
+  "packageId": "wpk4b5i30aRiK",
+  "spaceId": "spc3Xafw601jo",
+  "entry": "./src/index.tsx",
+  "name": {
+    "zh-CN": "apitableWidgetRepeatDelete",
+    "en-US": "apitableWidgetRepeatDelete"
+  },
+  "icon": "./package_icon.png",
+  "cover": "./cover.png",
+  "authorIcon": "./author_icon.png",
+  "description": {
+    "zh-CN": "apitableWidgetRepeatDelete 的描述",
+    "en-US": "apitableWidgetRepeatDelete description"
+  },
+  "sandbox": true
+}
