@@ -23,11 +23,10 @@ export function groupDuplicateRecords(records: IRecord[], fieldId: string) {
   return duplicates;
 }
 
-export async function mergeRecordGroup(
+export function previewMergeGroup(
   baseRecord: IRecord,
   duplicateRecords: IRecord[],
-  fields: IField[],
-  datasheet: any
+  fields: IField[]
 ) {
   const mergedValues: { [fieldId: string]: any } = {};
   const allRecords = [baseRecord, ...duplicateRecords];
@@ -104,6 +103,17 @@ export async function mergeRecordGroup(
       }
     }
   }
+
+  return mergedValues;
+}
+
+export async function mergeRecordGroup(
+  baseRecord: IRecord,
+  duplicateRecords: IRecord[],
+  fields: IField[],
+  datasheet: any
+) {
+  const mergedValues = previewMergeGroup(baseRecord, duplicateRecords, fields);
 
   if (Object.keys(mergedValues).length > 0) {
     if (datasheet.setRecord) {
