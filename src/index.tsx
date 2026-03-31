@@ -78,7 +78,7 @@ export const RepeatDeleteWidget: React.FC = () => {
             <div style={{ width: '200px' }}>
               <Select
                 value={activeFieldId || undefined}
-                options={fields.map(f => ({ label: f.name, value: f.id }))}
+                options={(fields || []).map(f => ({ label: f.name, value: f.id }))}
                 onChange={(val) => {
                   // handle onChange depending on value structure apitable select component returns
                   const resolvedVal = typeof val === 'object' && val !== null ? (val as any).value : val;
@@ -130,7 +130,7 @@ export const RepeatDeleteWidget: React.FC = () => {
                       <thead>
                         <tr style={{ background: '#fafafa', borderBottom: '2px solid #e8e8e8' }}>
                           <th style={{ padding: '10px', borderRight: '1px solid #e8e8e8', whiteSpace: 'nowrap', width: '120px', color: '#333' }}>字段名称</th>
-                          {groupRecords.map((r: any, idx: number) => (
+                          {(Array.isArray(groupRecords) ? groupRecords : []).map((r: any, idx: number) => (
                             <th key={r.id} style={{ padding: '10px', borderRight: '1px solid #e8e8e8', minWidth: '150px', color: '#333' }}>
                               原始记录 {idx + 1}
                             </th>
@@ -158,7 +158,7 @@ export const RepeatDeleteWidget: React.FC = () => {
                             let mergedDisplayVal = '';
                             if (mergedPreview.hasOwnProperty(f.id)) {
                               const val = mergedPreview[f.id];
-                              mergedDisplayVal = Array.isArray(val) ? val.map((v: any) => typeof v === 'object' && v !== null ? (v.name || v.id || JSON.stringify(v)) : v).join(', ') : String(val);
+                              mergedDisplayVal = (Array.isArray(val) && (val as any).map) ? val.map((v: any) => typeof v === 'object' && v !== null ? (v.name || v.id || JSON.stringify(v)) : v).join(', ') : String(val);
                             } else {
                               mergedDisplayVal = groupRecords[0].getCellValueString(f.id) || '';
                             }
@@ -168,7 +168,7 @@ export const RepeatDeleteWidget: React.FC = () => {
                                 <td style={{ padding: '10px', borderRight: '1px solid #f0f0f0', fontWeight: 'bold', color: '#555' }}>
                                   {f.name}
                                 </td>
-                                {groupRecords.map((r: any) => {
+                                {(Array.isArray(groupRecords) ? groupRecords : []).map((r: any) => {
                                   const valStr = r.getCellValueString(f.id) || '';
                                   return (
                                     <td key={r.id} style={{ padding: '10px', borderRight: '1px solid #f0f0f0', verticalAlign: 'top' }}>

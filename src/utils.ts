@@ -31,7 +31,9 @@ export function previewMergeGroup(
   const mergedValues: { [fieldId: string]: any } = {};
   const allRecords = [baseRecord, ...duplicateRecords];
 
-  for (const field of fields) {
+    const writableFields = fields.filter(f => !f.isComputed && f.type !== FieldType.Formula && f.type !== FieldType.Rollup && f.type !== FieldType.Lookup);
+
+  for (const field of writableFields) {
     const fId = field.id;
     const fType = field.type;
 
@@ -41,7 +43,10 @@ export function previewMergeGroup(
       fType === FieldType.Text ||
       fType === FieldType.DateTime ||
       fType === FieldType.Number ||
-      fType === FieldType.Currency
+      fType === FieldType.Currency ||
+      fType === FieldType.URL ||
+      fType === FieldType.Phone ||
+      fType === FieldType.Email
     ) {
       let bestValue = null;
       for (let i = allRecords.length - 1; i >= 0; i--) {
@@ -73,23 +78,30 @@ export function previewMergeGroup(
       const uniqueVals: any[] = [];
       const seen = new Set();
       for (const item of combinedArray) {
-        // usually objects have id, strings are primitive
-        const identifier = typeof item === 'object' && item !== null ? (item.id || item.name || JSON.stringify(item)) : item;
+        // Attachment needs whole object, but Link/Member/MultiSelect are better as strings IDs/values
+        const identifier = (typeof item === 'object' && item !== null) ? (item.id || item.name || JSON.stringify(item)) : item;
+        
         if (!seen.has(identifier)) {
           seen.add(identifier);
-          uniqueVals.push(item);
+          // For Link and Member, we should ideally only pass IDs back for writing
+          if (fType === FieldType.Link || fType === FieldType.Member) {
+            uniqueVals.push(identifier);
+          } else {
+            uniqueVals.push(item);
+          }
         }
       }
 
       // Check if there's actually a difference in array elements
-      const baseVal = baseRecord.getCellValue(fId) || [];
-      const baseLen = Array.isArray(baseVal) ? baseVal.length : (baseVal ? 1 : 0);
-
-      // Always update if length differs or if it's the simplest way to assure merge.
-      if (uniqueVals.length > baseLen) {
+      const baseVal = baseRecord.getCellValue(fId);
+      const baseValArray = Array.isArray(baseVal) ? baseVal : (baseVal ? [baseVal] : []);
+      
+      // If we have unique values that are more than what the base record has, update.
+      if (uniqueVals.length > baseValArray.length) {
         mergedValues[fId] = uniqueVals;
       }
     } else {
+      // For any other field type, take the latest non-empty value
       let bestValue = null;
       for (let i = allRecords.length - 1; i >= 0; i--) {
         const val = allRecords[i].getCellValue(fId);
@@ -98,7 +110,8 @@ export function previewMergeGroup(
           break;
         }
       }
-      if (bestValue !== null && bestValue !== baseRecord.getCellValue(fId)) {
+      // Shallow compare is risky for objects, so only update if it's a primitive or if we really need to
+      if (bestValue !== null && typeof bestValue !== 'object' && bestValue !== baseRecord.getCellValue(fId)) {
         mergedValues[fId] = bestValue;
       }
     }
@@ -123,7 +136,7 @@ export async function mergeRecordGroup(
     }
   }
 
-  const idsToDelete = duplicateRecords.map(r => r.id);
+  const idsToDelete = (duplicateRecords || []).map(r => r ? r.id : null).filter(id => id != null);
   if (idsToDelete.length > 0) {
     if (datasheet.deleteRecords) {
       await datasheet.deleteRecords(idsToDelete);
